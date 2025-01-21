@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from .models import Task
 
 def home(request):
     """
@@ -6,12 +7,6 @@ def home(request):
     with the tasks due soonest at the top
     """
 
-    to_do_tasks = Task.objects.filter(completed=False).order_by('due_date')
-    done_tasks = Task.objects.filter(completed=True).order_by('due_date')
-
-    context = {
-        'to_do_tasks': to_do_tasks,
-        'done_tasks': done_tasks,
-    }
-
-    return render(request, 'tasks/index.html', context)
+    tasks_todo = Task.objects.filter(completed=False).order_by('due_date')
+    tasks_done = Task.objects.filter(completed=True).order_by('due_date')
+    return render(request, 'tasks/index.html', {'tasks_todo': tasks_todo, 'tasks_done': tasks_done})
