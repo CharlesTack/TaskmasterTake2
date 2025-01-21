@@ -1,28 +1,40 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from .forms import TaskForm
-from .models import Task
+from .models import Task, Category
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, UpdateView, DeleteView
 
-def home(request):
-    """
-    A view to display the tasks to do and the completed tasks
-    with the tasks due soonest at the top
-    """
-
-    to_do_tasks = Task.objects.filter(completed=False).order_by('due_date')
-    done_tasks = Task.objects.filter(completed=True).order_by('-due_date')
-
+def index(request):
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('home')
+            return redirect('index')
     else:
         form = TaskForm()
+    
+    tasks_todo = Task.objects.filter(completed=False).order_by('due_date')
+    tasks_done = Task.objects.filter(completed=True).order_by('due_date')
+    return render(request, 'tasks/index.html', {'form': form, 'tasks_todo': tasks_todo, 'tasks_done': tasks_done})
 
-    context = {
-        'to_do_tasks': to_do_tasks,
-        'done_tasks': done_tasks,
-        'form': form,
-    }
+def home(request):
+    tasks_todo = Task.objects.filter(completed=False).order_by('due_date')
+    tasks_done = Task.objects.filter(completed=True).order_by('due_date')
+    return render(request, 'tasks/index.html', {'tasks_todo': tasks_todo, 'tasks_done': tasks_done})
 
-    return render(request, 'tasks/index.html', context)
+class TaskCreateView(CreateView):
+    model = Task
+    fields = ['title', 'description', 'due_date', 'completed', 'category']
+    template_name = 'tasks/task_form.html'
+    success_url = reverse_lazy('index')
+
+class TaskUpdateView(UpdateView):
+    model = Task
+    fields = ['title', 'description', 'due_date', 'completed', 'category']
+    template_name = 'tasks/task_form.html'
+    success_url = reverse_lazy('index')
+
+class TaskDeleteView(DeleteView):
+    model = Task
+    template_name = 'tasks/task_confirm_delete.html'
+    success_url = reverse_lazy('index')
